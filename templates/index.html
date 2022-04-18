@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>温度变化曲线图</title>
+    <!-- 引入 echarts.js -->
+    <script src="http://libs.baidu.com/jquery/1.7.2/jquery.min.js"></script>
+    <!-- 引入jquery.js -->
+    <script src="https://cdn.bootcss.com/echarts/4.1.0.rc2/echarts.min.js"></script>
+</head>
+
+<body style="background-color: #F0F8FF;">
+    <h2 style="text-align:center;">
+    小组成员：170400224张俊辉——170400228赵影——170400217谭昕
+    </h2>
+    <div id="temp" style="float:center;width: 1300px;height: 380px">
+        <h3>温度检测模块:</h3>
+        <div style="float: left;width: 300px;margin-top: 50px ">
+             <h4 style="text-align: center;">当前温度适合度(RGB灯)</h4>
+            <label style="margin-left: 100px;">
+                <input class="radio2" type="radio" name="radio2" value="0"> 
+                高温(红色)
+            </label><br><br>
+            <label style="margin-left: 100px;">
+                <input class="radio2" type="radio" name="radio2" value="1"> 
+                预高温(黄色)
+            </label><br><br>
+            <label style="margin-left: 100px;">
+                <input class="radio2" type="radio" name="radio2" value="2"> 
+                适温(绿色)
+            </label><br><br>
+            <label style="margin-left: 100px;">
+                <input class="radio2" type="radio" name="radio2" value="3"> 
+                偏冷(蓝色)
+            </label><br><br>
+        </div>
+        <div style="float: right;">
+            <div id="main" style="background-color:  #E6E6FA;width: 1000px;height: 325px;float: head;"></div>
+            <div style="text-align: center;">
+                <button class="button" id="start">开始</button>
+                <button class="button" id="pause">暂停</buttton>
+            </div>
+        </div>
+    </div>
+    <div style="width: 1300px;height: 200px">
+        <h3>烟雾&火焰检测模块:</h3>
+        <div style="float: left;margin-left: 200px;margin-top: 30px;">
+             <h4>当前烟雾检测情况</h4>
+            <label style="margin-left: 40px">
+                <input class="radio" type="radio" name="radio" value="0">
+                不存在有害气体
+            </label><br><br>
+            <label style="margin-left: 40px">
+                <input class="radio" type="radio" name="radio" value="1">
+                存在有害气体
+            </label>
+        </div>
+        <div style="float: right;margin-right: 500px;margin-top: 30px">
+            <h4>当前火焰检测情况</h4>
+            <label style="margin-left: 40px">
+                <input class="radio1" type="radio" name="radio1" value="0">
+                没有火焰
+            </label><br><br>
+            <label style="margin-left: 40px">
+                <input class="radio1" type="radio" name="radio1" value="1">
+                有火焰
+            </label>
+        </div>
+    </div>
+   
+    <style>
+        .radio,.radio1,.radio2{
+            width: 1.2rem;
+            height: 1.2rem;
+            background-color: #ffffff;
+            border: solid 1px #dddddd;
+            -webkit-border-radius: 0.6rem;
+            border-radius: 0.6rem;
+            font-size: 0.8rem;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            display: inline-block;
+            vertical-align: top;
+            cursor: default;
+            -webkit-appearance: none;  /**隐藏原生控件**/
+        }
+        /**选择后的样式**/
+        .radio:checked,.radio1:checked,.radio2:checked{
+            background-color: #04c9e8;
+            border: solid 1px #00adc8;
+            box-shadow: 0 1px 1px rgba(0,0,0,.1);
+            text-align: center;
+            background-clip: padding-box;
+        }
+         /**选择后 里面小对勾样式**/
+        .radio:checked:before,.radio1:checked:before,.radio2:checked:before{
+            content: '';
+            width: 0.5rem;
+            height: 0.3rem;
+            border: 1px solid #ffffff;
+            border-top: none;
+            border-right: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-left: -0.25rem;
+            margin-top: -0.25rem;
+            -webkit-transform: rotate(-45deg);
+                    transform: rotate(-45deg);
+        }
+        .button{
+            margin: 10px 20px;
+            position:relative;
+            width:80px;
+            height:30px;
+            text-align:center;
+            border-radius:3px;
+            background:#5ad;
+            color:#fff;
+            cursor:pointer;
+        }
+        .button:hover {
+            background-color: #e7e7e7;
+        }
+    </style>
+
+
+    <script type="text/javascript">
+        var myChart = echarts.init(document.getElementById('main'));
+        var start = false;
+        var back;
+        <!-- 页面加载自动加载下面的函数  -->
+        $(function() {
+            $("#start").click(function(){
+            start=true;   
+            run();
+            });    
+             $("#pause").click(function(){
+                start=false;
+                run();
+            });  
+            }
+        );
+        function run(){
+            if(start){
+                getData();
+                back=setInterval(getData, 2000);
+            }
+            else{
+                clearInterval(back);
+                alert("已暂停!\n点击【开始】继续");
+            }
+        };
+
+        <!-- 前后端交互接口，向localhost:8080/getData发送POST请求-->
+        function getData() {
+            $.ajax({
+                url: '/getData',
+                data: null,     //发送的数据
+                type: 'POST',
+                dataType: "json",
+                async: false,
+                success: function(j) {
+                    //显示温度曲线
+                    myChart.setOption({
+                        dataZoom: [{ //添加X轴滚动条
+                            type: 'slider',
+                            show: true
+                        }],
+                        title: {
+                            text: '温度变化曲线',
+                            subtext: '2020-7-3'
+                        },
+                        tooltip: {},
+                        legend: {
+                            data: ['温度']
+                        },
+                        xAxis: {
+                            boundaryGap: false,
+                            //axisLabel:{interval:0,rotate:45},
+                            data: JSON.parse(j.v1),
+                        },
+                        yAxis: {},
+                        series: [{
+                            name: '温度',
+                            type: 'line',
+                            splitArea: { show: true },
+                            data: JSON.parse(j.v2),
+                            smooth: true,
+                            label: {
+                                normal: {
+                                    position: 'top',
+                                    show: true
+                                }
+                            },
+                            areaStyle: {
+                                normal: {}
+                            }
+                        }]
+                    });
+
+                    var mq2 = JSON.parse(j.mq2)
+                    var fire = JSON.parse(j.fire)
+                    var color = JSON.parse(j.color)
+                    //设置烟雾
+                    if (mq2 == 1) {
+                        $("input[name='radio'][value=0]").attr("checked", true);
+                    } else {
+                        $("input[name='radio'][value=1]").attr("checked", true);
+                    }
+                    //设置火焰
+                    if (fire == 1) {
+                        $("input[name='radio1'][value=0]").attr("checked", true);
+                    } else {
+                        $("input[name='radio1'][value=1]").attr("checked", true);
+                    }
+                    //设置温度
+                    if (color == 0) {
+                        $("input[name='radio2'][value=0]").attr("checked", true);
+                    } else if (color == 1) {
+                        $("input[name='radio2'][value=1]").attr("checked", true);
+                    } else if (color == 2) {
+                        $("input[name='radio2'][value=2]").attr("checked", true);
+                    } else if (color == 3) {
+                        $("input[name='radio2'][value=3]").attr("checked", true);
+                    }
+                },
+                error: function(msg) {
+
+                }
+            })
+        }
+    </script>
+</body>
+
+</html>
